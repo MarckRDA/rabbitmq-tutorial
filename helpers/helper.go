@@ -1,4 +1,4 @@
-package helloworld
+package helpers
 
 import "log"
 

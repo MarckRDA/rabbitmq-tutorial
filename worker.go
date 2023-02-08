@@ -1,13 +1,15 @@
-package helloworld
+package main
 
 import (
+	"bytes"
 	"log"
+	"time"
 
 	"github.com/MarckRDA/rabbitmq-tutorial/helpers"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func Receive() {
+func main() {
 	conn, err := amqp.Dial("amqp://myuser:mypassword@localhost:5672/")
 	helpers.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -17,12 +19,12 @@ func Receive() {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		"worker", // name
+		false,    // durable
+		false,    // delete when unused
+		false,    // exclusive
+		false,    // no-wait
+		nil,      // arguments
 	)
 	helpers.FailOnError(err, "Failed to declare a queue")
 
@@ -42,6 +44,11 @@ func Receive() {
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
+			dotCount := bytes.Count(d.Body, []byte("."))
+			t := time.Duration(dotCount)
+			time.Sleep(t * time.Second)
+			log.Printf("Done")
+			d.Ack(false)
 		}
 	}()
 
